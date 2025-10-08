@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafe Radio</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Georgia', serif;
+            background: linear-gradient(to bottom, #8B4513, #A0522D); /* Madera light default */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        body.dark-theme {
+            background: linear-gradient(to bottom, #1a1a1a, #333); /* Oscuro para dark */
+            color: #e0e0e0;
+        }
+        .radio-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: row;
+            background: linear-gradient(145deg, #D2691E, #CD853F); /* Chasis madera light */
+            border: 5px solid #8B4513;
+            border-radius: 10px; /* Bordes redondeados al chasis */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 2px 10px rgba(255,255,255,0.1);
+            padding: 20px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        body.dark-theme .radio-container {
+            background: linear-gradient(145deg, #2a2a2a, #444); /* Chasis oscuro */
+            border: 5px solid #444;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .radio-container::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            bottom: 10px;
+            background: #654321; /* Interior light */
+            border-radius: 5px; /* Redondeado interno */
+            z-index: 0;
+        }
+        body.dark-theme .radio-container::before {
+            background: #111; /* Interior oscuro */
+        }
+        .main-content {
+            display: flex;
+            flex: 1;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 10px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header-logo {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%; /* Redondeado logo */
+        }
+        .header h1 {
+            margin: 0;
+            font-size: clamp(1.2em, 3vw, 2em);
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        body.dark-theme .header h1 {
+            color: #66b0ff;
+        }
+        .theme-toggle, .menu-icon {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            cursor: pointer;
+            color: white;
+            font-size: 18px;
+            padding: 8px;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+        .menu-icon {
+            flex-direction: column;
+            gap: 2px;
+            background: #8B4513;
+            border: 2px outset #D2691E;
+        }
+        body.dark-theme .menu-icon {
+            background: #333;
+            border: 2px outset #555;
+            color: #66b0ff;
+        }
+        .menu-icon span {
+            height: 3px;
+            width: 20px;
+            background: #FFD700;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+        body.dark-theme .menu-icon span {
+            background: #66b0ff;
+        }
+        .menu-icon.open span:nth-child(1) {
+            transform: translateY(5px) rotate(45deg);
+        }
+        .menu-icon.open span:nth-child(2) {
+            opacity: 0;
+        }
+        .menu-icon.open span:nth-child(3) {
+            transform: translateY(-5px) rotate(-45deg);
+        }
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        body.dark-theme .theme-toggle {
+            color: #e0e0e0;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .display-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+            flex: 1;
+            justify-content: flex-start; /* Bocina arriba */
+        }
+        .speaker {
+            width: 100%; /* Full ancho */
+            height: clamp(30vh, 35vh, 40vh); /* Al menos 30% altura, escalable */
+            /* Rejilla refinada: líneas más anchas, fondo discreto café */
+            background: 
+                /* Base textura sutil y discreta (radial bajo alpha) */
+                radial-gradient(ellipse at center, rgba(139, 69, 19, 0.05) 0%, transparent 70%),
+                /* Líneas horizontales más anchas (2px grosor) */
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 1.5px,
+                    rgba(64, 64, 64, 0.7) 1.5px,  /* Línea gris/marrón ancha */
+                    rgba(64, 64, 64, 0.7) 3.5px,
+                    transparent 3.5px,
+                    transparent 5px  /* Repeat 5px para densidad */
+                ),
+                /* Líneas verticales más anchas (superpuestas para cruz) */
+                repeating-linear-gradient(
+                    to right,
+                    transparent 0px,
+                    transparent 1.5px,
+                    rgba(64, 64, 64, 0.7) 1.5px,
+                    rgba(64, 64, 64, 0.7) 3.5px,
+                    transparent 3.5px,
+                    transparent 5px
+                ),
+                /* Fondo base rejilla discreto (tonos café suaves) */
+                linear-gradient(135deg, #6D4C41 0%, #8D6E63 100%);
+            border: 4px solid #8B4513; /* Borde ancho */
+            border-radius: 10px; /* Bordes redondeados bocina */
+            margin-bottom: 15px;
+            padding: 15px; /* Margen interno para rejilla */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-sizing: border-box;
+            background-size: 100% 100%, 100% 100%, 100% 100%, 100% 100%; /* Para capas */
+        }
+        body.dark-theme .speaker {
+            border: 4px solid #444; /* Borde ancho en dark */
+            background: 
+                /* Base discreta dark */
+                radial-gradient(ellipse at center, rgba(0, 0, 0, 0.1) 0%, transparent 70%),
+                /* Líneas horizontales anchas en dark */
+                repeating-linear-gradient(
+                    to bottom,
+                    transparent 0px,
+                    transparent 1.5px,
+                    rgba(128, 128, 128, 0.6) 1.5px,
+                    rgba(128, 128, 128, 0.6) 3.5px,
+                    transparent 3.5px,
+                    transparent 5px
+                ),
+                /* Líneas verticales anchas en dark */
+                repeating-linear-gradient(
+                    to right,
+                    transparent 0px,
+                    transparent 1.5px,
+                    rgba(128, 128, 128, 0.6) 1.5px,
+                    rgba(128, 128, 128, 0.6) 3.5px,
+                    transparent 3.5px,
+                    transparent 5px
+                ),
+                /* Fondo base dark discreto */
+                linear-gradient(135deg, #2C1810 0%, #3E2723 100%);
+        }
+        #audio-spectrum {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.4; /* Más discreta */
+            pointer-events: none; /* No interfiere con clics */
+        }
+        #audio-spectrum.animating {
+            opacity: 0.4; /* Solo visible al animar */
+        }
+        .display {
+            background: #000;
+            border: 2px inset #FFD700;
+            padding: 15px;
+            text-align: center;
+            border-radius: 10px; /* Redondeado display */
+            width: 100%; /* Full ancho como bocina */
+            max-width: 400px; /* Límite para no estirar texto */
+            height: clamp(60px, 10vh, 80px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            align-self: center; /* Centrado */
+            margin: 0 0 15px 0; /* Margen inferior para separación */
+            box-sizing: border-box;
+        }
+        body.dark-theme .display {
+            border: 2px inset #66b0ff;
+        }
+        .station-name {
+            font-family: 'Courier New', monospace;
+            font-size: clamp(0.8em, 2.5vw, 1.2em);
+            color: #00FF00;
+            white-space: nowrap;
+            overflow: hidden;
+            text-shadow: 
+                -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+                -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+            display: block;
+            text-align: center;
+        }
+        body.dark-theme .station-name, body.dark-theme .frequency {
+            color: #66b0ff;
+            text-shadow: 
+                -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff;
+        }
+        .marquee-wrapper {
+            display: flex;
+            width: 100%;
+            overflow: hidden;
+        }
+        .marquee-wrapper.playing {
+            animation: marquee 20s linear infinite; /* Más lenta y solo cuando playing */
+        }
+        @keyframes marquee {
+            0% { transform: translateX(100%); } /* Desde derecha */
+            100% { transform: translateX(-100%); } /* A izquierda */
+        }
+        .frequency {
+            font-family: 'Courier New', monospace;
+            font-size: clamp(1em, 3vw, 1.5em);
+            color: #00FF00;
+            font-weight: bold;
+            text-shadow: 
+                -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000,
+                -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000;
+            margin-top: 5px;
+            text-align: center;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between; /* Espaciado como radio física: izquierda, centro */
+            align-items: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+            gap: 15px; /* Espacio entre grupos */
+        }
+        .control-group-left { /* Volumen izquierda */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            flex: 1;
+            min-width: 80px;
+        }
+        .control-group-center { /* Sintonía + Play centro */
+            display: flex;
+            flex-direction: row; /* Horizontal para prev-dial-play-next */
+            align-items: center;
+            gap: 10px;
+            flex: 3; /* Más espacio para centro */
+            justify-content: center;
+        }
+        .control-btn {
+            background: #8B4513;
+            border: 2px outset #D2691E;
+            color: #FFD700;
+            width: clamp(40px, 6vw, 50px);
+            height: clamp(40px, 6vw, 50px);
+            cursor: pointer;
+            border-radius: 8px; /* Bordes redondeados botones */
+            font-size: clamp(1em, 3vw, 1.2em);
+            transition: all 0.3s;
+        }
+        body.dark-theme .control-btn {
+            background: #333;
+            border: 2px outset #555;
+            color: #66b0ff;
+        }
+        .control-btn:hover {
+            background: #D2691E;
+            border: 2px inset #A0522D;
+        }
+        body.dark-theme .control-btn:hover {
+            background: #555;
+            border: 2px inset #777;
+        }
+        .volume-display {
+            font-family: 'Courier New', monospace;
+            font-size: clamp(0.8em, 2vw, 1em);
+            color: #FFD700;
+            text-shadow: 1px 1px 2px #000;
+            border-radius: 5px; /* Redondeado display volumen */
+            padding: 2px 5px;
+            background: rgba(0,0,0,0.2);
+        }
+        body.dark-theme .volume-display {
+            color: #66b0ff;
+            text-shadow: 1px 1px 2px #fff;
+            background: rgba(255,255,255,0.1);
+        }
+        .dial {
+            width: clamp(100px, 15vw, 150px);
+            height: clamp(50px, 8vh, 70px);
+            background: #111;
+            border: 2px inset #FFD700;
+            border-radius: 15px; /* Más redondeado dial */
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            color: #00FF00;
+            font-size: clamp(1em, 2.5vw, 1.4em);
+            margin: 0 10px;
+        }
+        body.dark-theme .dial {
+            background: #222;
+            border: 2px inset #66b0ff;
+            color: #66b0ff;
+        }
+        .play-btn {
+            background: radial-gradient(circle, #FFD700, #DAA520);
+            border: none;
+            width: clamp(60px, 10vw, 90px);
+            height: clamp(60px, 10vw, 90px);
+            border-radius: 50%; /* Circular perfecto */
+            font-size: clamp(1.5em, 4vw, 2.5em);
+            color: #8B4513;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        body.dark-theme .play-btn {
+            background: radial-gradient(circle, #66b0ff, #007bff);
+            color: #000;
+        }
+        .play-btn:hover {
+            transform: scale(1.05);
+        }
+        .play-btn.playing {
+            background: radial-gradient(circle, #00FF00, #32CD32);
+            color: #000;
+        }
+        .presets {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .preset-btn {
+            background: #8B4513;
+            border: 2px outset #D2691E;
+            color: #FFD700;
+            padding: clamp(6px, 2vw, 10px) clamp(8px, 3vw, 15px);
+            cursor: pointer;
+            border-radius: 8px; /* Redondeado presets */
+            font-size: clamp(0.8em, 2.5vw, 1em);
+            transition: background 0.3s;
+            flex: 1;
+            min-width: 70px;
+        }
+        body.dark-theme .preset-btn {
+            background: #333;
+            border: 2px outset #555;
+            color: #66b0ff;
+        }
+        .preset-btn:hover, .preset-btn.active {
+            background: #D2691E;
+            border: 2px inset #A0522D;
+        }
+        .footer {
+            text-align: center;
+            font-size: clamp(0.7em, 2vw, 0.9em);
+            color: #8B4513;
+            margin-top: auto;
+            padding-bottom: 10px;
+            flex-shrink: 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.1);
+            border-radius: 10px 10px 0 0; /* Redondeado footer */
+        }
+        body.dark-theme .footer {
+            color: #66b0ff;
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* Off-Canvas con redondeo */
+        .off-canvas {
+            position: fixed;
+            top: 0;
+            right: -100vw;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(145deg, #D2691E, #CD853F);
+            border-left: 5px solid #8B4513;
+            border-top-right-radius: 10px; /* Redondeado esquina */
+            border-bottom-right-radius: 10px;
+            z-index: 1000;
+            transition: right 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        body.dark-theme .off-canvas {
+            background: linear-gradient(145deg, #2a2a2a, #444);
+            border-left: 5px solid #444;
+        }
+        .off-canvas.open {
+            right: 0;
+        }
+        .off-canvas-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+        }
+        .off-canvas h3 {
+            color: #FFD700;
+            text-align: center;
+            margin: 0 0 20px 0;
+        }
+        body.dark-theme .off-canvas h3 {
+            color: #66b0ff;
+        }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .nav-tab {
+            padding: 10px 15px;
+            background: #8B4513;
+            color: #FFD700;
+            border: none;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.3s;
+        }
+        body.dark-theme .nav-tab {
+            background: #333;
+            color: #66b0ff;
+        }
+        .nav-tab.active {
+            background: #D2691E;
+        }
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .station-list, .about-content, .contact-content {
+            list-style: none;
+            padding: 0;
+        }
+        .station-list li {
+            margin-bottom: 10px;
+        }
+        .station-item {
+            background: #654321;
+            border: 1px solid #FFD700;
+            color: #FFD700;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 8px; /* Redondeado items */
+            transition: background 0.3s;
+            display: grid;
+            grid-template-columns: 1fr 25%;
+            align-items: center;
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
+        }
+        body.dark-theme .station-item {
+            background: #222;
+            border: 1px solid #66b0ff;
+            color: #e0e0e0;
+        }
+        .station-item:hover {
+            background: #8B4513;
+        }
+        body.dark-theme .station-item:hover {
+            background: #555;
+        }
+        .station-item h3 {
+            margin: 0;
+            font-size: 1em;
+        }
+        .station-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        body.dark-theme .station-btn {
+            background: #0056b3;
+        }
+        .station-btn:hover {
+            background: #0056b3;
+        }
+        .about-content p, .contact-content p, .contact-content ul {
+            color: #333;
+            line-height: 1.6;
+        }
+        body.dark-theme .about-content p, body.dark-theme .contact-content p, body.dark-theme .contact-content ul {
+            color: #e0e0e0;
+        }
+        .contact-content form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .contact-content input, .contact-content textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        body.dark-theme .contact-content input, body.dark-theme .contact-content textarea {
+            background: #333;
+            border: 1px solid #555;
+            color: #e0e0e0;
+        }
+        .contact-content input[type="submit"] {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        body.dark-theme .contact-content input[type="submit"] {
+            background: #0056b3;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s;
+        }
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #FFD700;
+            font-size: 1.5em;
+            cursor: pointer;
+        }
+        body.dark-theme .close-btn {
+            color: #66b0ff;
+        }
+        body.dark-theme .loading::after {
+            color: #66b0ff;
+        }
+
+        /* Animaciones del Ref */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+            color: #00FF00;
+        }
+        @keyframes dots {
+            0% { content: '.'; }
+            33% { content: '..'; }
+            66% { content: '...'; }
+        }
+        .playing {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsivo - Apilado en portrait */
+        @media (orientation: portrait) and (max-width: 768px) {
+            .radio-container {
+                flex-direction: column;
+                padding: 10px;
+            }
+            .main-content {
+                justify-content: space-evenly;
+            }
+            .header {
+                margin-bottom: 5px;
+            }
+            .display-section {
+                margin: 10px 0;
+                order: 2;
+            }
+            .controls {
+                flex-direction: column; /* Apila grupos verticalmente */
+                gap: 20px;
+                order: 3;
+                margin: 10px 0;
+                align-items: center;
+            }
+            .control-group-left, .control-group-center {
+                flex-direction: row; /* Dentro de grupos, horizontal para mejor UX */
+                justify-content: center;
+            }
+            .presets {
+                order: 4;
+                margin-top: 5px;
+            }
+            .speaker {
+                order: 1;
+                margin-bottom: 10px;
+            }
+            .footer {
+                order: 5;
+                padding-bottom: 5px;
+            }
+            .menu-icon {
+                display: flex;
+            }
+        }
+
+        @media (orientation: landscape) and (min-width: 769px) {
+            .radio-container {
+                flex-direction: row;
+                padding: 30px;
+            }
+            .controls {
+                flex-direction: row; /* Row horizontal para layout físico */
+                justify-content: space-between;
+            }
+            .display-section {
+                order: unset;
+            }
+            .menu-icon {
+                display: none; /* Oculto en landscape, ya que off-canvas no es necesario */
+            }
+        }
+
+        @media (max-width: 480px) {
+            .radio-container {
+                padding: 5px;
+            }
+            .header h1 {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="radio-container">
+        <div class="main-content">
+            <div class="header">
+                <div class="logo-container">
+                    <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==" alt="Logo" class="header-logo"> <!-- Placeholder; usa tu PNG de café -->
+                    <h1>Cafe Radio</h1>
+                    <div class="menu-icon" id="menuIcon"> <!-- Menú movido al header -->
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+                <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+            <div class="display-section">
+                <div class="speaker">
+                    <canvas id="audio-spectrum" width="150" height="150"></canvas>
+                </div>
+                <div class="display" id="player-container">
+                    <div class="station-name" id="stationNameWrapper">
+                        <div class="marquee-wrapper">
+                            <span id="stationName">Selecciona Estación</span>
+                            <span id="stationNameDup"></span>
+                        </div>
+                    </div>
+                    <div class="frequency" id="frequency">FM</div>
+                </div>
+            </div>
+            <div class="controls">
+                <div class="control-group-left"> <!-- Volumen izquierda -->
+                    <button class="control-btn" id="volUp">+</button>
+                    <button class="control-btn" id="volDown">-</button>
+                    <button class="control-btn" id="muteBtn">🔊</button>
+                    <div class="volume-display" id="volDisplay">50%</div>
+                </div>
+                <div class="control-group-center"> <!-- Sintonía + Play centro -->
+                    <button class="control-btn" id="prevStation">◀</button>
+                    <div class="dial" id="tuningDial">FM</div>
+                    <button class="play-btn" id="playBtn">▶️</button>
+                    <button class="control-btn" id="nextStation">▶</button>
+                </div>
+            </div>
+            <div class="presets">
+                <button class="preset-btn active" onclick="playStation('LOFI 24/7', 'https://ec3.yesstreaming.net:3755/stream')">☕ Lofi</button>
+                <button class="preset-btn" onclick="playStation('Radio Oxígeno', 'https://mdstrm.com/audio/5fab0687bcd6c2389ee9480c/icecast.audio')">Oxígeno</button>
+                <button class="preset-btn" onclick="playStation('Radio Magica', 'https://mdstrm.com/audio/6839e28eb3fdc597ac2e2e43/icecast.audio?property=aiir&_=224873')">Mágica</button>
+            </div>
+            <div class="footer">
+                <p>© 2024 Cafe Radio. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay -->
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Off-Canvas (mismo que antes) -->
+    <div class="off-canvas" id="offCanvas">
+        <div class="off-canvas-header">
+            <h3 id="offCanvasTitle">Menú Cafe Radio</h3>
+            <button class="close-btn" id="closeBtn">&times;</button>
+        </div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-tab="stations">Estaciones</button>
+            <button class="nav-tab" data-tab="about">Acerca de</button>
+            <button class="nav-tab" data-tab="contact">Contacto</button>
+        </div>
+        <div id="stations-tab" class="tab-content active">
+            <ul class="station-list" id="stations-list">
+                <!-- Renderizado dinámico -->
+            </ul>
+        </div>
+        <div id="about-tab" class="tab-content">
+            <div class="about-content">
+                <h2>Acerca de</h2>
+                <p>Mi nombre es Cristian Loaiza Huallpa y soy el creador de Cafe Radio. Esta aplicación permite a los usuarios escuchar sus estaciones de radio favoritas en línea de manera sencilla y accesible, con un toque retro de café. Puedes conocer más sobre mí y mi experiencia profesional visitando mi <a href="https://www.linkedin.com/in/cristianloaizahuallpa" target="_blank">perfil de LinkedIn</a>.</p>
+            </div>
+        </div>
+        <div id="contact-tab" class="tab-content">
+            <div class="contact-content">
+                <h2>Contacto</h2>
+                <p>Si deseas ponerte en contacto conmigo, puedes utilizar la siguiente información o completar el formulario de contacto.</p>
+                <ul>
+                    <li>Nombre: Cristian Loaiza Huallpa</li>
+                    <li>Correo: <a href="mailto:cristianloaizahuallpa@gmail.com">cristianloaizahuallpa@gmail.com</a></li>
+                    <li>WhatsApp: <a href="https://wa.me/51927898835" target="_blank">+51 927 898 835</a></li>
+                    <li>LinkedIn: <a href="https://www.linkedin.com/in/cristianloaizahuallpa" target="_blank">Cristian Loaiza Huallpa</a></li>
+                </ul>
+                <form action="mailto:cristianloaizahuallpa@gmail.com" method="post" enctype="text/plain">
+                    <label for="fname">Nombre:</label>
+                    <input type="text" id="fname" name="nombre" required>
+                    <label for="lname">Apellido:</label>
+                    <input type="text" id="lname" name="apellido" required>
+                    <label for="email">Correo Electrónico:</label>
+                    <input type="email" id="email" name="correo" required>
+                    <label for="phone">Número de WhatsApp:</label>
+                    <input type="tel" id="phone" name="whatsapp" required>
+                    <label for="message">Descripción o Mensaje:</label>
+                    <textarea id="message" name="mensaje" required></textarea>
+                    <input type="submit" value="Enviar">
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <audio id="radioAudio" loop style="display: none;"> <!-- Controls ocultos explícitamente -->
+        <source id="audio-source" src="" type="audio/mpeg">
+        Tu navegador no soporta audio.
+    </audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const stationsListData = [
+                { name: 'LOFI 24/7', url: 'https://ec3.yesstreaming.net:3755/stream' },
+                { name: 'Radio Oxígeno', url: 'https://mdstrm.com/audio/5fab0687bcd6c2389ee9480c/icecast.audio' },
+                { name: "Radio Magica", url: 'https://mdstrm.com/audio/6839e28eb3fdc597ac2e2e43/icecast.audio?property=aiir&_=224873' },
+                { name: 'Radio fit', url: 'https://node-15.zeno.fm/fb9sp98vc5zuv' },
+                { name: 'Radio Felicidad', url: 'https://mdstrm.com/audio/5fad731fcf097a068af3c8f7/icecast.audio' },
+                { name: 'Radio RPP', url: 'https://mdstrm.com/audio/5fab3416b5f9ef165cfab6e9/icecast.audio' },
+                { name: 'Radio Exitosa', url: 'https://stream.zeno.fm/csy4vzackf9uv' },
+                { name: 'Radio La Inolvidable', url: 'https://27263.live.streamtheworld.com/CRP_LI_SC?csegid=30008&dist=30008' },
+                { name: 'Radio Panamericana', url: 'https://mdstrm.com/audio/6598b62dded1380470f4e539/icecast.audio' },
+                { name: 'Radio Ritmo Romántica', url: 'https://23113.live.streamtheworld.com/CRP_RIT_SC?csegid=30008&dist=30008' },
+                { name: 'Radio Corazón', url: 'https://mdstrm.com/audio/5fada514fc16c006bd63370f/icecast.audio' },
+                { name: 'Radio Radiomar', url: 'https://23113.live.streamtheworld.com/CRP_MARAAC_SC' },
+                { name: 'Radio Nueva Q', url: 'https://27163.live.streamtheworld.com/CRP_NQ_SC?csegid=30008&dist=30008' }, 
+                { name: 'Radio Planeta', url: 'https://mdstrm.com/audio/6839e274f40e6b9832e37633/icecast.audio?property=aiir&_=481938' },
+                { name: 'Radio Onda Cero', url: 'https://mdstrm.com/audio/6598b65ab398c90871aff8cc/icecast.audio' },
+                { name: 'Radio Z Rock & Pop', url: 'https://radioz.egostreaming.pe/radio/3e4f6a1b2c3d4e567890abcd/' },
+                { name: 'Radio Studio 92', url: 'https://gcdn.2mdn.net/videoplayback/id/0751c120d4c7c8a1/itag/345/source/web_video_ads/xpc/EgVovf3BOg%3D%3D/ctier/L/acao/yes/ip/0.0.0.0/ipbits/0/expire/1752812287/sparams/ip,ipbits,expire,id,itag,source,xpc,ctier,acao/signature/36B65E93093AE4B3E88C9C65B223187B837A084D.3E4DFCA2EC3288AF4DF879EDD389CCBEBE88331C/key/ck2/file/file.mp4' },
+                { name: 'Radio Moda', url: 'https://14613.live.streamtheworld.com/CRP_MOD_SC?csegid=30008&dist=30008' },
+                { name: 'Radio Exitoso', url: 'https://neptuno-2-audio.mediaserver.digital/79525baf-b0f5-4013-a8bd-3c5c293c6561' },
+                { name: 'Radio Oasis', url: 'https://stream.zeno.fm/3bhmjhlsl0wvv' },
+                { name: 'Radio las Quenas', url: 'https://radio.lnx.pe:7000/stream' },
+                { name: 'Radio Salkantay', url: 'http://167.114.118.119:7662/stream' },
+                { name: 'Radio Mega Stereo', url: 'https://cast1.my-control-panel.com/proxy/megaestereo/stream' },
+                { name: 'Radio Coca Raymi', url: 'https://stream.zeno.fm/di4yvkfirz0vv' },
+                { name: 'Radio Naranjal', url: 'https://encrypted-vtbn0.gstatic.com/video?q=tbn1GcQWpGaVlXuYDfjm5y3PdJCtZ-eZN_LOlDelgA' },
+                { name: 'Rock en Español', url: 'https://stream.zeno.fm/0vgy8qv3feruv' },
+                { name: 'Radio Disney', url: 'https://26643.live.streamtheworld.com/DISNEY_PER_LM_SC?dist=web-radiodisney-disneylatino' },
+                { name: 'Radio 1', url: 'https://rugby-mad-nokia-admitted.trycloudflare.com/stream?1718287105538' },
+                { name: 'Radio 2', url: 'https://panelautodj.innovatestream.pe:10951' },
+            ];
+
+            const stationName = document.getElementById('stationName');
+            const stationNameDup = document.getElementById('stationNameDup');
+            const frequency = document.getElementById('frequency');
+            const tuningDial = document.getElementById('tuningDial');
+            const playerContainer = document.getElementById('player-container');
+            const audioSource = document.getElementById('audio-source');
+            const audio = document.getElementById('radioAudio');
+            const canvas = document.getElementById('audio-spectrum');
+            const canvasCtx = canvas.getContext('2d');
+            const playBtn = document.getElementById('playBtn');
+            const volUp = document.getElementById('volUp');
+            const volDown = document.getElementById('volDown');
+            const muteBtn = document.getElementById('muteBtn');
+            const volDisplay = document.getElementById('volDisplay');
+            const prevStation = document.getElementById('prevStation');
+            const nextStation = document.getElementById('nextStation');
+            const menuIcon = document.getElementById('menuIcon');
+            const offCanvas = document.getElementById('offCanvas');
+            const overlay = document.getElementById('overlay');
+            const closeBtn = document.getElementById('closeBtn');
+            const themeToggle = document.getElementById('themeToggle');
+            const stationsList = document.getElementById('stations-list');
+
+            let isPlaying = false;
+            let currentVolume = 50;
+            let isMuted = false;
+            let currentStationIndex = 0;
+            let barCount = 32;
+            let barHeights = new Array(barCount).fill(0);
+            let isLandscape = window.matchMedia('(orientation: landscape)').matches;
+            let animationId;
+
+            // Función para detectar orientación y cambiar animación
+            function updateOrientation() {
+                isLandscape = window.matchMedia('(orientation: landscape)').matches;
+                // Reinicia animación para reflejar cambio
+                if (animationId) cancelAnimationFrame(animationId);
+                drawSpectrum();
+            }
+            window.addEventListener('orientationchange', updateOrientation);
+            window.addEventListener('resize', updateOrientation);
+
+            // Renderizar estaciones en off-canvas con fade-in
+            stationsListData.forEach((station, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="station-item fade-in" style="animation-delay: ${index * 0.1}s;">
+                        <h3>${station.name}</h3>
+                        <button class="station-btn" onclick="playStation('${station.name}', '${station.url}')">▶</button>
+                    </div>
+                `;
+                stationsList.appendChild(li);
+            });
+
+            // Marquee duplicado
+            function updateStationName(name) {
+                const text = name + '    ';
+                stationName.textContent = text;
+                stationNameDup.textContent = text;
+                stationName.parentElement.classList.add('playing');
+            }
+
+            // Play estación (del ref, adaptado)
+            window.playStation = function(name, url) {
+                playerContainer.classList.add('loading');
+                updateStationName('Cargando...');
+                frequency.textContent = 'FM';
+                audioSource.src = url;
+                audio.load();
+                audio.play().then(() => {
+                    playerContainer.classList.remove('loading');
+                    updateStationName(name);
+                    frequency.textContent = 'FM'; // Placeholder; ajusta si tienes freq
+                    tuningDial.textContent = 'FM';
+                    playBtn.textContent = '⏸️';
+                    playBtn.classList.add('playing');
+                    isPlaying = true;
+                    currentStationIndex = stationsListData.findIndex(s => s.name === name);
+                }).catch(error => {
+                    console.error('Error al reproducir:', error);
+                    playerContainer.classList.remove('loading');
+                    updateStationName('Error al cargar');
+                    isPlaying = false;
+                });
+                closeOffCanvas();
+            };
+
+            // Audio events (del ref)
+            audio.addEventListener('play', () => {
+                isPlaying = true;
+                playBtn.textContent = '⏸️';
+                playBtn.classList.add('playing');
+                stationName.parentElement.classList.add('playing');
+            });
+            audio.addEventListener('pause', () => {
+                isPlaying = false;
+                playBtn.textContent = '▶️';
+                playBtn.classList.remove('playing');
+                stationName.parentElement.classList.remove('playing');
+            });
+            audio.addEventListener('ended', () => {
+                isPlaying = false;
+                playBtn.textContent = '▶️';
+                playBtn.classList.remove('playing');
+                stationName.parentElement.classList.remove('playing');
+            });
+
+            // Play/Pause manual
+            playBtn.addEventListener('click', () => {
+                if (isPlaying) {
+                    audio.pause();
+                } else {
+                    audio.play();
+                }
+            });
+
+            // Volumen
+            volUp.addEventListener('click', () => {
+                currentVolume = Math.min(currentVolume + 10, 100);
+                updateVolume();
+            });
+            volDown.addEventListener('click', () => {
+                currentVolume = Math.max(currentVolume - 10, 0);
+                updateVolume();
+            });
+            function updateVolume() {
+                const effectiveVolume = isMuted ? 0 : currentVolume / 100;
+                audio.volume = effectiveVolume;
+                volDisplay.textContent = `${currentVolume}%`;
+            }
+            muteBtn.addEventListener('click', () => {
+                isMuted = !isMuted;
+                muteBtn.textContent = isMuted ? '🔇' : '🔊';
+                updateVolume();
+            });
+
+            // Next/Prev (cicla por array)
+            nextStation.addEventListener('click', () => {
+                currentStationIndex = (currentStationIndex + 1) % stationsListData.length;
+                playStation(stationsListData[currentStationIndex].name, stationsListData[currentStationIndex].url);
+            });
+            prevStation.addEventListener('click', () => {
+                currentStationIndex = (currentStationIndex - 1 + stationsListData.length) % stationsListData.length;
+                playStation(stationsListData[currentStationIndex].name, stationsListData[currentStationIndex].url);
+            });
+
+            // Visualizer adaptado por orientación y tema
+            function drawSpectrum() {
+                const width = canvas.width;
+                const height = canvas.height;
+                const isDark = document.body.classList.contains('dark-theme');
+                const color = isDark ? '#66b0ff' : '#00FF00'; // Acorde al texto pixelado
+                canvasCtx.clearRect(0, 0, width, height);
+
+                if (isLandscape) {
+                    // Landscape: Barras radiales circulares
+                    const centerX = width / 2;
+                    const centerY = height / 2;
+                    const radius = Math.min(width, height) / 4;
+                    const barWidth = (Math.PI * 2) / barCount;
+
+                    if (isPlaying) {
+                        for (let i = 0; i < barCount; i++) {
+                            barHeights[i] = Math.max(10, barHeights[i] + (Math.random() - 0.5) * 10);
+                            barHeights[i] = Math.min(barHeights[i], radius * 0.5);
+                        }
+                    } else {
+                        for (let i = 0; i < barCount; i++) {
+                            barHeights[i] = Math.max(0, barHeights[i] * 0.9);
+                        }
+                    }
+
+                    for (let i = 0; i < barCount; i++) {
+                        const radians = barWidth * i;
+                        const barHeight = barHeights[i];
+                        const x1 = centerX + Math.cos(radians) * radius;
+                        const y1 = centerY + Math.sin(radians) * radius;
+                        const x2 = centerX + Math.cos(radians) * (radius + barHeight);
+                        const y2 = centerY + Math.sin(radians) * (radius + barHeight);
+
+                        canvasCtx.beginPath();
+                        canvasCtx.strokeStyle = color;
+                        canvasCtx.lineWidth = 2;
+                        canvasCtx.moveTo(x1, y1);
+                        canvasCtx.lineTo(x2, y2);
+                        canvasCtx.stroke();
+                    }
+                } else {
+                    // Portrait: Barras verticales lineales (VU meter)
+                    const barWidth = width / 20; // 20 barras
+                    const barSpacing = barWidth * 0.1;
+
+                    if (isPlaying) {
+                        for (let i = 0; i < 20; i++) {
+                            barHeights[i] = Math.max(10, barHeights[i] + (Math.random() - 0.5) * 20);
+                            barHeights[i] = Math.min(barHeights[i], height * 0.8);
+                        }
+                    } else {
+                        for (let i = 0; i < 20; i++) {
+                            barHeights[i] = Math.max(0, barHeights[i] * 0.95);
+                        }
+                    }
+
+                    for (let i = 0; i < 20; i++) {
+                        const x = (barWidth + barSpacing) * i + barSpacing / 2;
+                        const barHeight = barHeights[i];
+
+                        canvasCtx.fillStyle = color;
+                        canvasCtx.fillRect(x, height - barHeight, barWidth, barHeight);
+                    }
+                }
+
+                animationId = requestAnimationFrame(drawSpectrum);
+            }
+
+            // Resize canvas
+            function resizeCanvas() {
+                const speakerRect = canvas.parentElement.getBoundingClientRect();
+                canvas.width = speakerRect.width;
+                canvas.height = speakerRect.height;
+                updateOrientation(); // Actualiza al redimensionar
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+            drawSpectrum();
+
+            // Tema (del ref)
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            if (currentTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                themeToggle.querySelector('.theme-icon').textContent = '☀️';
+            }
+            themeToggle.addEventListener('click', () => {
+                document.body.classList.toggle('dark-theme');
+                const theme = document.body.classList.contains('dark-theme') ? 'dark' : 'light';
+                localStorage.setItem('theme', theme);
+                themeToggle.querySelector('.theme-icon').textContent = theme === 'dark' ? '☀️' : '🌙';
+                // Reinicia visualizer para nuevo color
+                if (animationId) cancelAnimationFrame(animationId);
+                drawSpectrum();
+            });
+
+            // Off-Canvas y Tabs
+            menuIcon.addEventListener('click', () => {
+                offCanvas.classList.add('open');
+                overlay.classList.add('active');
+                document.querySelector('.nav-tab[data-tab="stations"]').click(); // Default a estaciones
+            });
+            closeBtn.addEventListener('click', closeOffCanvas);
+            overlay.addEventListener('click', closeOffCanvas);
+            function closeOffCanvas() {
+                offCanvas.classList.remove('open');
+                overlay.classList.remove('active');
+            }
+
+            // Tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.tab + '-tab').classList.add('active');
+                    offCanvas.querySelector('h3').textContent = tab.textContent;
+                });
+            });
+
+            // Dial simulado
+            tuningDial.addEventListener('click', () => {
+                tuningDial.textContent = 'FM Scan';
+            });
+
+            // Inicial
+            updateStationName('Selecciona Estación');
+            updateVolume();
+            audio.volume = 0.5;
+        });
+    </script>
+</body>
+</html>
